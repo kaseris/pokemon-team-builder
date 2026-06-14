@@ -5,7 +5,13 @@ type Props = {
   label: ReactNode;
   children: ReactNode;
   className?: string;
+  placement?: 'top' | 'bottom';
 };
+
+const PLACEMENT_CLASS = {
+  top: 'bottom-full mb-2',
+  bottom: 'top-full mt-2',
+} as const;
 
 /**
  * On-brand replacement for the native `title` tooltip. The default OS tooltip
@@ -13,7 +19,7 @@ type Props = {
  * and is hard to read; this shows a crisp navy bubble with near-white text on
  * hover or keyboard focus.
  */
-export function Tooltip({ label, children, className = '' }: Props) {
+export function Tooltip({ label, children, className = '', placement = 'top' }: Props) {
   const [show, setShow] = useState(false);
 
   return (
@@ -28,7 +34,7 @@ export function Tooltip({ label, children, className = '' }: Props) {
       {show && (
         <span
           role="tooltip"
-          className="pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2 whitespace-nowrap rounded-lg border border-accent/40 bg-foreground px-2.5 py-1.5 text-xs font-semibold tracking-wide text-surface-raised shadow-lg"
+          className={`pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 whitespace-nowrap rounded-lg border border-accent/40 bg-foreground px-2.5 py-1.5 text-xs font-semibold tracking-wide text-surface-raised shadow-lg ${PLACEMENT_CLASS[placement]}`}
         >
           {label}
         </span>
