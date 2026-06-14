@@ -237,10 +237,10 @@ export function PokemonSetEditor({ set, defaultLevel, onChange }: Props) {
             <div className="col-start-2 row-start-2 flex min-w-0 flex-wrap items-center gap-x-8 gap-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 {types.map((t) => (
-                  <TypeBadge key={t} type={t} size="md" />
+                  <TypeBadge key={t} type={t} size="md" showTooltip />
                 ))}
                 {set.teraType && (
-                  <TypeBadge type={set.teraType} variant="tera" size="md" />
+                  <TypeBadge type={set.teraType} variant="tera" size="md" showTooltip />
                 )}
               </div>
               <LevelSelector

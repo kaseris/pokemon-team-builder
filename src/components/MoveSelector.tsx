@@ -76,20 +76,12 @@ export function MoveSelector({ set, onChange }: Props) {
     onChange({ moves: movesList });
   };
 
-  const closePicker = () => {
+  const dismissPicker = useCallback(() => {
     setOpenSlot(null);
     setSearch('');
-    if (openSlot !== null) {
-      slotRefs.current[openSlot]?.focus();
-    }
-  };
+  }, []);
 
-  // Close the open move picker (without refocusing) when the user clicks or
-  // tabs outside the moves group.
-  useDismissOnOutside([movesGroupRef, pickerPortalRef], openSlot !== null, () => {
-    setOpenSlot(null);
-    setSearch('');
-  });
+  useDismissOnOutside([movesGroupRef, pickerPortalRef], openSlot !== null, dismissPicker);
 
   const focusMoveSlot = useCallback((index: number) => {
     setFocusedSlot(index);
@@ -235,7 +227,7 @@ export function MoveSelector({ set, onChange }: Props) {
                 onSearchChange={setSearch}
                 onMethodFilterChange={setMethodFilter}
                 onSelect={(name) => updateMove(index, name)}
-                onClose={closePicker}
+                onClose={dismissPicker}
               />
             )}
           </div>
