@@ -18,7 +18,7 @@ export function TypeBadge({ type, variant = 'default', size = 'md', className = 
   if (iconUrl) {
     return (
       <span
-        className={`inline-flex shrink-0 ${className} ${
+        className={`inline-flex shrink-0 ${
           variant === 'tera'
             ? 'rounded-full ring-2 ring-accent/70 ring-offset-1 ring-offset-surface-raised'
             : ''
@@ -30,7 +30,7 @@ export function TypeBadge({ type, variant = 'default', size = 'md', className = 
           alt={label}
           width={px}
           height={px}
-          className="block rounded-full shadow-sm"
+          className={`block rounded-full shadow-sm ${className}`}
           loading="lazy"
         />
       </span>

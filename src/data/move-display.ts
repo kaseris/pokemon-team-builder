@@ -59,12 +59,23 @@ export function moveTypeSurfaceStyle(type: string): {
 } {
   const typeColor = TYPE_COLORS[type] ?? 'var(--color-muted)';
   return {
-    background: `color-mix(in oklch, ${typeColor} 16%, var(--color-surface-raised))`,
-    borderColor: `color-mix(in oklch, ${typeColor} 42%, var(--color-border))`,
+    background: `color-mix(in oklch, ${typeColor} 26%, var(--color-surface-raised))`,
+    borderColor: `color-mix(in oklch, ${typeColor} 58%, var(--color-border))`,
   };
 }
 
 export function moveTypeAccentColor(type: string): string {
   const typeColor = TYPE_COLORS[type] ?? 'var(--color-muted)';
-  return `color-mix(in oklch, ${typeColor} 72%, var(--color-border))`;
+  return typeColor;
+}
+
+export function moveTypeEffectSurface(type: string): {
+  background: string;
+  borderColor: string;
+} {
+  const typeColor = TYPE_COLORS[type] ?? 'var(--color-muted)';
+  return {
+    background: `color-mix(in oklch, ${typeColor} 36%, var(--color-surface-raised))`,
+    borderColor: `color-mix(in oklch, ${typeColor} 72%, var(--color-border))`,
+  };
 }
