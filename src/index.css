@@ -1,0 +1,230 @@
+@import "tailwindcss";
+
+@layer base {
+  button:not(:disabled),
+  select:not(:disabled),
+  [role="option"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
+}
+
+@theme {
+  --font-display: "Archivo", system-ui, sans-serif;
+  --font-body: "Hanken Grotesk", system-ui, sans-serif;
+
+  /* Jirachi light surfaces — pale silver-blue (#e6eef6) ground, near-white cards */
+  --color-surface: oklch(0.945 0.011 250);
+  --color-surface-raised: oklch(0.995 0.003 250);
+  --color-surface-overlay: oklch(0.905 0.02 250);
+  --color-border: oklch(0.86 0.022 250);
+  --color-muted: oklch(0.52 0.025 252);
+
+  /* Jirachi's deep navy body — primary ink */
+  --color-foreground: oklch(0.30 0.05 258);
+  --color-on-accent: oklch(0.27 0.05 258);
+
+  /* Jirachi's golden star */
+  --color-accent: #e6bd52;
+  --color-accent-dim: oklch(0.60 0.12 78);
+  --color-accent-bright: #ffe65a;
+
+  --color-danger: oklch(0.56 0.20 25);
+  --color-success: oklch(0.56 0.13 150);
+  --color-warning: oklch(0.60 0.13 62);
+
+  --color-type-normal: #a8a878;
+  --color-type-fire: #f08030;
+  --color-type-water: #6890f0;
+  --color-type-grass: #78c850;
+  --color-type-electric: #f8d030;
+  --color-type-ice: #98d8d8;
+  --color-type-fighting: #c03028;
+  --color-type-poison: #a040a0;
+  --color-type-ground: #e0c068;
+  --color-type-flying: #a890f0;
+  --color-type-psychic: #f85888;
+  --color-type-bug: #a8b820;
+  --color-type-rock: #b8a038;
+  --color-type-ghost: #705898;
+  --color-type-dragon: #7038f8;
+  --color-type-dark: #705848;
+  --color-type-steel: #b8b8d0;
+  --color-type-fairy: #ee99ac;
+  --color-type-stellar: #4466ff;
+}
+
+html {
+  font-family: var(--font-body);
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-surface);
+  background-image:
+    radial-gradient(ellipse 70% 48% at 50% -10%, color-mix(in oklch, var(--color-accent) 26%, transparent), transparent 70%),
+    radial-gradient(ellipse 92% 55% at 50% 116%, color-mix(in oklch, var(--color-accent-bright) 22%, transparent), transparent 72%);
+}
+
+/* Faint dot-grid texture, faded toward the edges */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image: radial-gradient(
+    circle,
+    color-mix(in oklch, var(--color-foreground) 7%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 26px 26px;
+  opacity: 0.45;
+  -webkit-mask-image: radial-gradient(ellipse 92% 82% at 50% 18%, black, transparent 96%);
+  mask-image: radial-gradient(ellipse 92% 82% at 50% 18%, black, transparent 96%);
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  overflow: hidden;
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Eyebrow / micro-label — deep gold for legibility on light */
+.eyebrow {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: var(--color-accent-dim);
+}
+
+/* Unified card */
+.panel {
+  border-radius: 1rem;
+  border: 1px solid color-mix(in oklch, var(--color-border) 85%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--color-surface-raised) 92%, transparent),
+      color-mix(in oklch, var(--color-surface) 82%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.7),
+    0 12px 30px -18px rgba(40, 55, 95, 0.3);
+  backdrop-filter: blur(3px);
+}
+
+/* Floating dropdown / picker surface */
+.popover {
+  border: 1px solid color-mix(in oklch, var(--color-border) 90%, transparent);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--color-surface-raised) 98%, transparent),
+      color-mix(in oklch, var(--color-surface) 96%, transparent)
+    );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.8),
+    0 18px 40px -20px rgba(40, 55, 95, 0.35);
+  backdrop-filter: blur(6px);
+}
+
+/* Dimmed overlay behind modal dialogs */
+.modal-backdrop {
+  background:
+    radial-gradient(ellipse 55% 38% at 50% 0%, color-mix(in oklch, var(--color-accent) 22%, transparent), transparent 70%),
+    color-mix(in oklch, var(--color-foreground) 42%, transparent);
+  backdrop-filter: blur(3px);
+}
+
+/* Focused dialog card — white surface with a gilded edge */
+.modal-card {
+  border: 1px solid color-mix(in oklch, var(--color-accent) 50%, var(--color-border));
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in oklch, var(--color-surface-raised) 99%, white),
+      color-mix(in oklch, var(--color-surface) 97%, white)
+    );
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.9),
+    0 30px 70px -22px rgba(30, 40, 70, 0.45);
+}
+
+/* Section heading with Jirachi's gold tick */
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-display);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-foreground);
+}
+
+.section-title::before {
+  content: "";
+  flex: none;
+  width: 0.22rem;
+  height: 0.9em;
+  border-radius: 999px;
+  background: var(--color-accent-dim);
+  box-shadow: 0 0 10px color-mix(in oklch, var(--color-accent) 60%, transparent);
+}
+
+/* Smaller zone label that groups the analysis rail */
+.zone-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--color-muted);
+}
+
+.zone-label::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, color-mix(in oklch, var(--color-border) 90%, transparent), transparent);
+}
+
+/* Desktop scroll regions — gold scrollbars */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklch, var(--color-accent) 55%, var(--color-border)) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--color-accent) 55%, var(--color-border));
+}
+
+/* Hide the native search clear (×) — we render a uniform CloseButton instead */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
