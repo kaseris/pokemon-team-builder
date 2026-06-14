@@ -13,6 +13,7 @@ import { useDismissOnOutside } from '../hooks/useDismissOnOutside';
 import { useOverlayPlacement } from '../hooks/useOverlayPlacement';
 import { useFloatingPanel } from '../hooks/useFloatingPanel';
 import { getMoveDisplayData, getMoveEffect, moveTypeAccentColor } from '../data/move-display';
+import { filterBySearch } from '../engine/search-match';
 import { MoveDisplay, moveSlotStyle } from './MoveDisplay';
 import { MoveEffectPreview } from './MoveEffectPreview';
 import { FloatingMoveEffect } from './FloatingMoveEffect';
@@ -49,11 +50,13 @@ export function MoveSelector({ set, onChange }: Props) {
   }, [set.species, set.forme]);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    return moves.filter((move) => {
-      if (methodFilter !== 'all' && !move.methods.includes(methodFilter)) return false;
-      if (!q) return true;
-      return move.name.toLowerCase().includes(q);
+    const byMethod =
+      methodFilter === 'all'
+        ? moves
+        : moves.filter((move) => move.methods.includes(methodFilter));
+    return filterBySearch(byMethod, search, {
+      kind: 'move',
+      getName: (move) => move.name,
     });
   }, [moves, search, methodFilter]);
 

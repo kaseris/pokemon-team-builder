@@ -4,6 +4,7 @@ import { PokemonSprite } from './PokemonSprite';
 import { CloseButton } from './CloseButton';
 import { focusRingClass, useListKeyboardNavigation } from '../hooks/useListKeyboardNavigation';
 import { useDismissOnOutside } from '../hooks/useDismissOnOutside';
+import { filterBySearch } from '../engine/search-match';
 
 export type SearchSpecies = ReturnType<typeof getSpeciesList>[number];
 
@@ -31,9 +32,11 @@ export function SpeciesSearch({
   const speciesList = useMemo(() => getSpeciesList(), []);
 
   const filtered = useMemo(() => {
-    const q = value.toLowerCase();
-    if (!q) return speciesList.slice(0, 50);
-    return speciesList.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 50);
+    if (!value.trim()) return speciesList.slice(0, 50);
+    return filterBySearch(speciesList, value, {
+      kind: 'species',
+      getName: (species) => species.name,
+    }).slice(0, 50);
   }, [speciesList, value]);
 
   const listOpen = open && Boolean(value);

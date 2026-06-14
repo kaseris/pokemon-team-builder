@@ -5,16 +5,11 @@ import { ItemSprite } from './ItemSprite';
 import { CloseButton } from './CloseButton';
 import { focusRingClass, useListKeyboardNavigation } from '../hooks/useListKeyboardNavigation';
 import { useDismissOnOutside } from '../hooks/useDismissOnOutside';
+import { filterBySearch } from '../engine/search-match';
 
 type Props = {
   value?: string;
   onChange: (patch: Partial<PokemonSet>) => void;
-};
-
-/** Common misspellings / alternate names → Showdown item name */
-const ITEM_SEARCH_ALIASES: Record<string, string> = {
-  excadrillite: 'Excadrite',
-  excadrinite: 'Excadrite',
 };
 
 export function ItemSelector({ value, onChange }: Props) {
@@ -24,20 +19,19 @@ export function ItemSelector({ value, onChange }: Props) {
   const triggerRef = useRef<HTMLButtonElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const filtered = useMemo(() => {
-    const q = search.toLowerCase().trim();
-    if (!q) return items;
-    return items.filter((item) => {
-      const name = item.name.toLowerCase();
-      const category = item.category?.toLowerCase() ?? '';
-      if (name.includes(q) || category.includes(q)) return true;
-      if (item.searchTerms?.some((term) => term.includes(q))) return true;
-      return Object.entries(ITEM_SEARCH_ALIASES).some(
-        ([alias, itemName]) =>
-          itemName === item.name && alias.includes(q),
-      );
-    });
-  }, [items, search]);
+  const filtered = useMemo(
+    () =>
+      filterBySearch(items, search, {
+        kind: 'item',
+        getName: (item) => item.name,
+        getExtraTerms: (item) => {
+          const terms = [...(item.searchTerms ?? [])];
+          if (item.category) terms.push(item.category);
+          return terms;
+        },
+      }),
+    [items, search],
+  );
 
   const selectItem = (name: string) => {
     onChange({ item: name });

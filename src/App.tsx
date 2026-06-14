@@ -4,6 +4,7 @@ import { useTeam } from './hooks/useTeam';
 import { getFormat } from './data/formats';
 import { getBaseStats, getSpeciesList } from './data/dex';
 import { validateTeam } from './engine/validation';
+import { filterBySearch } from './engine/search-match';
 import { FormatSelector } from './components/FormatSelector';
 import { TeamSlotList } from './components/TeamSlotList';
 import { PokemonSetEditor } from './components/PokemonSetEditor';
@@ -200,9 +201,11 @@ function AddPokemonModal({
   const speciesList = useMemo(() => getSpeciesList(), []);
 
   const filtered = useMemo(() => {
-    const q = search.toLowerCase();
-    if (!q) return speciesList.slice(0, 80);
-    return speciesList.filter((s) => s.name.toLowerCase().includes(q)).slice(0, 80);
+    if (!search.trim()) return speciesList.slice(0, 80);
+    return filterBySearch(speciesList, search, {
+      kind: 'species',
+      getName: (species) => species.name,
+    }).slice(0, 80);
   }, [speciesList, search]);
 
   const { handleKeyDown, getItemProps, highlightClass } = useListKeyboardNavigation({
