@@ -9,9 +9,9 @@ function containsTarget(refs: RefTarget, target: Node): boolean {
 
 /**
  * Calls `onDismiss` when the user interacts outside the referenced element(s),
- * either by pointing/clicking elsewhere or by moving focus to another element
- * (e.g. tabbing away). No-op while `enabled` is false so closed popovers don't
- * pay for listeners.
+ * either by pointing/clicking elsewhere, by moving focus to another element
+ * (e.g. tabbing away), or by pressing Escape. No-op while `enabled` is false
+ * so closed popovers don't pay for listeners.
  */
 export function useDismissOnOutside(
   refs: RefTarget,
@@ -21,18 +21,27 @@ export function useDismissOnOutside(
   useEffect(() => {
     if (!enabled) return;
 
-    const handle = (e: Event) => {
+    const handleOutside = (e: Event) => {
       const target = e.target as Node | null;
       if (target && !containsTarget(refs, target)) {
         onDismiss();
       }
     };
 
-    document.addEventListener('mousedown', handle);
-    document.addEventListener('focusin', handle);
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onDismiss();
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutside);
+    document.addEventListener('focusin', handleOutside);
+    document.addEventListener('keydown', handleEscape);
     return () => {
-      document.removeEventListener('mousedown', handle);
-      document.removeEventListener('focusin', handle);
+      document.removeEventListener('mousedown', handleOutside);
+      document.removeEventListener('focusin', handleOutside);
+      document.removeEventListener('keydown', handleEscape);
     };
   }, [enabled, onDismiss]);
 }

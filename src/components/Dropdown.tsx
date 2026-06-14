@@ -1,5 +1,6 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { focusRingClass, useListKeyboardNavigation } from '../hooks/useListKeyboardNavigation';
+import { useDismissOnOutside } from '../hooks/useDismissOnOutside';
 
 type Props<T> = {
   options: T[];
@@ -54,10 +55,7 @@ export function Dropdown<T>({
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const close = () => {
-    setOpen(false);
-    triggerRef.current?.focus();
-  };
+  const dismiss = () => setOpen(false);
 
   const select = (option: T) => {
     onSelect(option);
@@ -65,24 +63,14 @@ export function Dropdown<T>({
     triggerRef.current?.focus();
   };
 
+  useDismissOnOutside(containerRef, open, dismiss);
+
   const { handleKeyDown, getItemProps, highlightClass } = useListKeyboardNavigation({
     enabled: open && options.length > 0,
     itemCount: options.length,
     onSelect: (index) => select(options[index]),
-    onClose: close,
+    onClose: dismiss,
   });
-
-  // Close when clicking outside the trigger/list.
-  useEffect(() => {
-    if (!open) return;
-    const onPointerDown = (e: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', onPointerDown);
-    return () => document.removeEventListener('mousedown', onPointerDown);
-  }, [open]);
 
   return (
     <div ref={containerRef} className="relative">
