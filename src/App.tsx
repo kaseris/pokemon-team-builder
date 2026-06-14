@@ -1,5 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { focusRingClass, useListKeyboardNavigation } from './hooks/useListKeyboardNavigation';
+import { useSettings } from './hooks/useSettings';
 import { useTeam } from './hooks/useTeam';
 import { getFormat } from './data/formats';
 import { getBaseStats, getSpeciesList } from './data/dex';
@@ -15,6 +16,11 @@ import { BaseStatsPanel } from './components/BaseStatsPanel';
 import { PokemonWeaknessPanel } from './components/PokemonWeaknessPanel';
 import { OffensiveCoveragePanel } from './components/OffensiveCoveragePanel';
 import { ImportExportModal } from './components/ImportExportModal';
+import { SettingsModal } from './components/SettingsModal';
+
+const JirachiAssistant = lazy(() =>
+  import('./components/JirachiAssistant').then((m) => ({ default: m.JirachiAssistant })),
+);
 
 function App() {
   const {
@@ -28,9 +34,11 @@ function App() {
     removePokemon,
     replaceTeam,
   } = useTeam();
+  const { settings, updateSettings } = useSettings();
 
   const [showImportExport, setShowImportExport] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
   const format = getFormat(team.formatId);
   const issues = useMemo(() => validateTeam(team), [team]);
@@ -76,6 +84,18 @@ function App() {
             className="flex cursor-pointer items-center rounded-lg border border-border bg-surface-overlay px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:bg-accent hover:text-on-accent"
           >
             Import / Export
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowSettings(true)}
+            aria-label="Open settings"
+            className={`flex cursor-pointer items-center gap-2 rounded-lg border border-border bg-surface-overlay px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:bg-accent hover:text-on-accent ${focusRingClass}`}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-4 w-4" aria-hidden="true">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" strokeLinecap="round" />
+            </svg>
+            Settings
           </button>
         </div>
       </header>
@@ -160,6 +180,20 @@ function App() {
           }}
           onClose={() => setShowAddModal(false)}
         />
+      )}
+
+      {showSettings && (
+        <SettingsModal
+          settings={settings}
+          onUpdate={updateSettings}
+          onClose={() => setShowSettings(false)}
+        />
+      )}
+
+      {settings.assistantEnabled && (
+        <Suspense fallback={null}>
+          <JirachiAssistant />
+        </Suspense>
       )}
     </div>
   );
