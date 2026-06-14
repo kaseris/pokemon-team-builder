@@ -45,12 +45,11 @@ export function BaseStatDiamond({
   const cx = pad + size / 2;
   const cy = pad + size / 2;
   const maxRadius = size * (prominent ? 0.3 : 0.28);
-  const labelRadius = size * (prominent ? 0.42 : 0.4);
+  const labelRadius = size * (prominent ? 0.39 : 0.36);
   const totalBst = STAT_IDS.reduce((sum, stat) => sum + baseStats[stat], 0);
-  const labelSize = prominent ? (size >= 300 ? 14 : size >= 260 ? 13 : 11) : 9;
-  const valueSize = prominent ? (size >= 300 ? 20 : size >= 260 ? 18 : 14) : 11;
-  const labelOffset = prominent ? (size >= 300 ? 12 : size >= 260 ? 10 : 8) : 6;
-  const valueOffset = prominent ? (size >= 300 ? 16 : size >= 260 ? 14 : 11) : 8;
+  const labelSize = prominent ? (size >= 300 ? 17 : size >= 260 ? 16 : 14) : 10;
+  const valueSize = prominent ? (size >= 300 ? 26 : size >= 260 ? 24 : 18) : 12;
+  const nameValueGap = prominent ? 3 : 2;
 
   return (
     <div className={`flex flex-col items-center ${prominent ? 'gap-3' : 'gap-1'} ${className}`}>
@@ -101,58 +100,62 @@ export function BaseStatDiamond({
 
         <polygon
           points={polygonPoints(cx, cy, maxRadius, baseStats)}
-          fill="color-mix(in oklch, var(--color-accent) 40%, transparent)"
-          stroke="var(--color-accent)"
-          strokeWidth={prominent ? 2.5 : 2}
+          fill="color-mix(in oklch, var(--color-accent-bright) 55%, var(--color-accent) 30%)"
+          stroke="var(--color-accent-dim)"
+          strokeWidth={prominent ? 3 : 2}
           strokeLinejoin="round"
+          opacity={0.92}
         />
 
         {CHART_ORDER.map((stat, i) => {
-          const label = polarPoint(cx, cy, labelRadius, i);
+          const angle = -Math.PI / 2 + i * (Math.PI / 3);
+          const base = polarPoint(cx, cy, labelRadius, i);
+          const outward = prominent ? 3 : 2;
+          const anchor = {
+            x: base.x + outward * Math.cos(angle),
+            y: base.y + outward * Math.sin(angle),
+          };
           const value = baseStats[stat];
           const isHigh = value >= 100;
-          const isLow = value <= 50;
+          const nameDy = -(valueSize / 2 + nameValueGap / 2);
 
           return (
-            <g key={stat}>
-              <text
-                x={label.x}
-                y={label.y - labelOffset}
-                textAnchor="middle"
-                dominantBaseline="auto"
-                fill="var(--color-muted)"
+            <text
+              key={stat}
+              x={anchor.x}
+              y={anchor.y}
+              textAnchor="middle"
+              dominantBaseline="central"
+            >
+              <tspan
+                x={anchor.x}
+                dy={nameDy}
+                fill="var(--color-foreground)"
+                fillOpacity={0.82}
                 fontSize={labelSize}
-                fontWeight={600}
+                fontWeight={700}
                 style={{ fontFamily: 'var(--font-body)', textTransform: 'uppercase' }}
               >
                 {STAT_LABELS[stat]}
-              </text>
-              <text
-                x={label.x}
-                y={label.y + valueOffset}
-                textAnchor="middle"
-                dominantBaseline="hanging"
-                fill={
-                  isHigh
-                    ? 'var(--color-accent-dim)'
-                    : isLow
-                      ? 'var(--color-muted)'
-                      : 'var(--color-foreground)'
-                }
+              </tspan>
+              <tspan
+                x={anchor.x}
+                dy={labelSize + nameValueGap}
+                fill={isHigh ? 'var(--color-accent-dim)' : 'var(--color-foreground)'}
                 fontSize={valueSize}
-                fontWeight={700}
+                fontWeight={800}
                 style={{ fontFamily: 'var(--font-display)' }}
               >
                 {value}
-              </text>
-            </g>
+              </tspan>
+            </text>
           );
         })}
       </svg>
-      <p className={prominent ? 'text-base text-muted' : 'text-[11px] text-muted'}>
+      <p className={prominent ? 'text-sm font-semibold text-foreground/75' : 'text-xs font-semibold text-foreground/70'}>
         BST{' '}
         <span
-          className={`font-display font-bold text-foreground ${prominent ? (size >= 300 ? 'text-3xl' : 'text-2xl') : ''}`}
+          className={`font-display font-extrabold text-foreground ${prominent ? (size >= 300 ? 'text-3xl' : 'text-2xl') : ''}`}
         >
           {totalBst}
         </span>

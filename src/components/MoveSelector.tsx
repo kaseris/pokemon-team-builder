@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type RefObject } from 'react';
+import { createPortal } from 'react-dom';
 import type { PokemonSet } from '../types/pokemon';
 import type { LearnableMove, LearnMethod } from '../types/moves';
 import { LEARN_METHOD_LABELS } from '../types/moves';
@@ -9,8 +10,12 @@ import {
   useListKeyboardNavigation,
 } from '../hooks/useListKeyboardNavigation';
 import { useDismissOnOutside } from '../hooks/useDismissOnOutside';
+import { useOverlayPlacement } from '../hooks/useOverlayPlacement';
+import { useFloatingPanel } from '../hooks/useFloatingPanel';
 import { getMoveDisplayData, getMoveEffect, moveTypeAccentColor } from '../data/move-display';
 import { MoveDisplay, moveSlotStyle } from './MoveDisplay';
+import { MoveEffectPreview } from './MoveEffectPreview';
+import { FloatingMoveEffect } from './FloatingMoveEffect';
 import { CloseButton } from './CloseButton';
 
 type Props = {
@@ -31,6 +36,8 @@ export function MoveSelector({ set, onChange }: Props) {
   const [search, setSearch] = useState('');
   const [methodFilter, setMethodFilter] = useState<LearnMethod | 'all'>('all');
   const slotRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const slotContainerRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const pickerPortalRef = useRef<HTMLDivElement>(null);
   const movesGroupRef = useRef<HTMLDivElement>(null);
   const [focusedSlot, setFocusedSlot] = useState(0);
 
@@ -76,7 +83,7 @@ export function MoveSelector({ set, onChange }: Props) {
 
   // Close the open move picker (without refocusing) when the user clicks or
   // tabs outside the moves group.
-  useDismissOnOutside(movesGroupRef, openSlot !== null, () => {
+  useDismissOnOutside([movesGroupRef, pickerPortalRef], openSlot !== null, () => {
     setOpenSlot(null);
     setSearch('');
   });
@@ -150,7 +157,19 @@ export function MoveSelector({ set, onChange }: Props) {
             : undefined;
 
           return (
-          <div key={index} className="relative">
+          <div
+            key={index}
+            ref={(el) => {
+              slotContainerRefs.current[index] = el;
+            }}
+            className={
+              openSlot === index
+                ? 'relative z-[1]'
+                : openSlot !== null
+                  ? 'relative z-0'
+                  : 'relative'
+            }
+          >
             <div className="flex gap-2">
               <button
                 ref={(el) => {
@@ -201,6 +220,9 @@ export function MoveSelector({ set, onChange }: Props) {
 
             {openSlot === index && (
               <MovePicker
+                portalRef={pickerPortalRef}
+                anchorRefs={slotContainerRefs}
+                anchorIndex={index}
                 moves={filtered}
                 loading={loading}
                 search={search}
@@ -222,6 +244,9 @@ export function MoveSelector({ set, onChange }: Props) {
 }
 
 function MovePicker({
+  portalRef,
+  anchorRefs,
+  anchorIndex,
   moves,
   loading,
   search,
@@ -233,6 +258,9 @@ function MovePicker({
   onSelect,
   onClose,
 }: {
+  portalRef: RefObject<HTMLDivElement | null>;
+  anchorRefs: RefObject<(HTMLDivElement | null)[]>;
+  anchorIndex: number;
   moves: LearnableMove[];
   loading: boolean;
   search: string;
@@ -244,13 +272,28 @@ function MovePicker({
   onSelect: (name: string) => void;
   onClose: () => void;
 }) {
+  const getAnchor = useCallback(
+    () => anchorRefs.current[anchorIndex] ?? null,
+    [anchorRefs, anchorIndex],
+  );
+  const placement = useOverlayPlacement(getAnchor, true);
+  const { panelRef, style } = useFloatingPanel(getAnchor, placement, true);
+
+  const setPanelRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      panelRef.current = el;
+      portalRef.current = el;
+    },
+    [panelRef, portalRef],
+  );
+
   const isDisabled = (index: number) => {
     const move = moves[index];
     if (!move) return true;
     return selected.has(move.name) && move.name !== current;
   };
 
-  const { handleKeyDown, getItemProps, highlightClass, activeIndex } = useListKeyboardNavigation({
+  const { handleKeyDown, getItemProps, activeIndex } = useListKeyboardNavigation({
     enabled: !loading && moves.length > 0,
     itemCount: moves.length,
     onSelect: (index) => onSelect(moves[index].name),
@@ -261,107 +304,114 @@ function MovePicker({
 
   const focusedMove = moves[activeIndex];
   const focusedEffect = focusedMove ? getMoveEffect(focusedMove.name) : null;
+  const effectInsidePicker = placement === 'below';
 
-  return (
-    <div
-      className="popover absolute left-0 right-0 z-20 mt-1 flex max-h-[min(72vh,26rem)] flex-col rounded-xl p-3"
-      onKeyDown={handleKeyDown}
-    >
-      <div className="mb-2 flex shrink-0 items-center gap-2">
-        <input
-          type="search"
-          autoFocus
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Search moves…"
-          className="min-w-0 flex-1 rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm outline-none focus:border-accent"
+  const picker = (
+    <>
+      {focusedMove && !effectInsidePicker && (
+        <FloatingMoveEffect
+          anchorRef={panelRef}
+          move={focusedMove}
+          effect={focusedEffect}
         />
-        <CloseButton tabIndex={-1} onClick={onClose} aria-label="Close move picker" />
-      </div>
-
-      <div className="mb-2 flex shrink-0 flex-wrap gap-1">
-        {METHOD_FILTERS.map((filter) => (
-          <button
-            key={filter}
-            type="button"
-            tabIndex={-1}
-            onClick={() => onMethodFilterChange(filter)}
-            className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${focusRingClass} ${
-              methodFilter === filter
-                ? 'bg-accent text-on-accent'
-                : 'bg-surface-raised text-muted hover:text-foreground'
-            }`}
-          >
-            {filter === 'all' ? 'All' : LEARN_METHOD_LABELS[filter]}
-          </button>
-        ))}
-      </div>
-
-      {focusedMove && (
-        <div
-          className="mb-2 shrink-0 rounded-lg border border-border/60 border-l-[3px] bg-surface-overlay/60 px-3 py-2"
-          style={{ borderLeftColor: moveTypeAccentColor(focusedMove.type ?? 'Normal') }}
-          aria-live="polite"
-        >
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-            {focusedMove.name}
-          </p>
-          <p className="mt-0.5 line-clamp-3 text-xs leading-snug text-foreground/85">
-            {focusedEffect ?? 'No effect description available.'}
-          </p>
-        </div>
       )}
 
-      <ul
-        className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border bg-surface-raised"
-        role="listbox"
+      <div
+        ref={setPanelRef}
+        style={style}
+        className="flex flex-col"
+        onKeyDown={handleKeyDown}
       >
-        {loading ? (
-          <li className="px-3 py-4 text-center text-sm text-muted">Fetching learnable moves…</li>
-        ) : moves.length === 0 ? (
-          <li className="px-3 py-4 text-center text-sm text-muted">No matching moves</li>
-        ) : (
-          moves.map((move, index) => {
-            const taken = isDisabled(index);
-            const itemProps = getItemProps(index);
-            return (
-              <li key={move.name}>
-                <button
-                  type="button"
-                  tabIndex={-1}
-                  disabled={taken}
-                  ref={itemProps.ref as (el: HTMLButtonElement | null) => void}
-                  onMouseEnter={itemProps.onMouseEnter}
-                  onClick={() => onSelect(move.name)}
-                  className={highlightClass(
-                    index,
-                    `flex w-full items-center gap-2 border-l-[3px] px-3 py-2 text-left text-sm ${
-                      taken
-                        ? 'cursor-not-allowed opacity-40'
-                        : 'hover:bg-surface-overlay'
-                    } ${move.name === current ? 'bg-accent/10' : ''}`,
-                  )}
-                  style={{ borderLeftColor: moveTypeAccentColor(move.type ?? 'Normal') }}
-                >
-                  <MoveDisplay
-                    move={move}
-                    variant="picker"
-                    suffix={
-                      <span className="shrink-0 text-[11px] uppercase text-muted">
-                        {methodTags(move.methods)
-                          .map((m) => LEARN_METHOD_LABELS[m])
-                          .join(' · ')}
-                        {move.minLevel !== undefined ? ` · Lv${move.minLevel}` : ''}
-                      </span>
-                    }
-                  />
-                </button>
-              </li>
-            );
-          })
-        )}
-      </ul>
-    </div>
+        <div className="popover flex min-h-0 flex-1 flex-col rounded-xl p-3">
+          <div className="mb-2 flex shrink-0 items-center gap-2">
+            <input
+              type="search"
+              autoFocus
+              value={search}
+              onChange={(e) => onSearchChange(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Search moves…"
+              className="min-w-0 flex-1 rounded-lg border border-border bg-surface-raised px-3 py-2 text-sm outline-none focus:border-accent"
+            />
+            <CloseButton tabIndex={-1} onClick={onClose} aria-label="Close move picker" />
+          </div>
+
+          <div className="mb-2 flex shrink-0 flex-wrap gap-1">
+            {METHOD_FILTERS.map((filter) => (
+              <button
+                key={filter}
+                type="button"
+                tabIndex={-1}
+                onClick={() => onMethodFilterChange(filter)}
+                className={`rounded-md px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide ${focusRingClass} ${
+                  methodFilter === filter
+                    ? 'bg-accent text-on-accent'
+                    : 'bg-surface-raised text-muted hover:text-foreground'
+                }`}
+              >
+                {filter === 'all' ? 'All' : LEARN_METHOD_LABELS[filter]}
+              </button>
+            ))}
+          </div>
+
+          {focusedMove && effectInsidePicker && (
+            <div className="mb-2">
+              <MoveEffectPreview move={focusedMove} effect={focusedEffect} />
+            </div>
+          )}
+
+          <ul
+            className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border bg-surface-raised"
+            role="listbox"
+          >
+            {loading ? (
+              <li className="px-3 py-4 text-center text-sm text-muted">Fetching learnable moves…</li>
+            ) : moves.length === 0 ? (
+              <li className="px-3 py-4 text-center text-sm text-muted">No matching moves</li>
+            ) : (
+              moves.map((move, index) => {
+                const taken = isDisabled(index);
+                const itemProps = getItemProps(index);
+                return (
+                  <li key={move.name}>
+                    <button
+                      type="button"
+                      tabIndex={-1}
+                      disabled={taken}
+                      ref={itemProps.ref as (el: HTMLButtonElement | null) => void}
+                      onMouseEnter={itemProps.onMouseEnter}
+                      onClick={() => onSelect(move.name)}
+                      className={`flex w-full items-center gap-2.5 border-l-[4px] px-3 py-2.5 text-left ${
+                        index === activeIndex ? 'bg-accent/15 ring-1 ring-inset ring-accent/50' : ''
+                      } ${
+                        taken
+                          ? 'cursor-not-allowed opacity-40'
+                          : 'hover:bg-surface-overlay'
+                      } ${move.name === current ? 'bg-accent/10' : ''}`}
+                      style={{ borderLeftColor: moveTypeAccentColor(move.type ?? 'Normal') }}
+                    >
+                      <MoveDisplay
+                        move={move}
+                        variant="picker"
+                        suffix={
+                          <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">
+                            {methodTags(move.methods)
+                              .map((m) => LEARN_METHOD_LABELS[m])
+                              .join(' · ')}
+                            {move.minLevel !== undefined ? ` · Lv${move.minLevel}` : ''}
+                          </span>
+                        }
+                      />
+                    </button>
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        </div>
+      </div>
+    </>
   );
+
+  return createPortal(picker, document.body);
 }

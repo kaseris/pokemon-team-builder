@@ -18,19 +18,19 @@ const CATEGORY_META: Record<
     label: 'Physical',
     short: 'Phy',
     color: '#c45c1a',
-    bg: 'color-mix(in oklch, #c45c1a 18%, var(--color-surface-raised))',
+    bg: 'color-mix(in oklch, #c45c1a 28%, var(--color-surface-raised))',
   },
   Special: {
     label: 'Special',
     short: 'SpA',
     color: '#3d6fd4',
-    bg: 'color-mix(in oklch, #3d6fd4 18%, var(--color-surface-raised))',
+    bg: 'color-mix(in oklch, #3d6fd4 28%, var(--color-surface-raised))',
   },
   Status: {
     label: 'Status',
     short: 'Sta',
     color: '#7a6b8f',
-    bg: 'color-mix(in oklch, #7a6b8f 18%, var(--color-surface-raised))',
+    bg: 'color-mix(in oklch, #7a6b8f 28%, var(--color-surface-raised))',
   },
 };
 
@@ -99,12 +99,14 @@ export function MoveCategoryIcon({
 
 function MoveStats({ data }: { data: MoveDisplayData }) {
   return (
-    <span className="flex shrink-0 items-center gap-2 text-[11px] font-semibold tabular-nums text-muted">
-      <span title="Base power">
-        <span className="text-foreground/45">PWR</span> {formatMovePower(data.power, data.category)}
+    <span className="flex shrink-0 items-center gap-2.5 text-xs tabular-nums">
+      <span title="Base power" className="font-semibold text-foreground">
+        <span className="font-bold text-muted">PWR</span>{' '}
+        {formatMovePower(data.power, data.category)}
       </span>
-      <span title="Accuracy">
-        <span className="text-foreground/45">ACC</span> {formatMoveAccuracy(data.accuracy)}
+      <span title="Accuracy" className="font-semibold text-foreground">
+        <span className="font-bold text-muted">ACC</span>{' '}
+        {formatMoveAccuracy(data.accuracy)}
       </span>
     </span>
   );
@@ -128,10 +130,12 @@ export function MoveDisplay({
 
   if (variant === 'picker') {
     return (
-      <span className={`flex min-w-0 flex-1 items-center gap-2 ${className}`}>
-        <TypeBadge type={data.type} size="sm" />
+      <span className={`flex min-w-0 flex-1 items-center gap-2.5 ${className}`}>
+        <TypeBadge type={data.type} size="sm" className="saturate-150" />
         <MoveCategoryIcon category={data.category} size="sm" />
-        <span className="min-w-0 flex-1 truncate font-medium">{data.name}</span>
+        <span className="min-w-0 flex-1 truncate text-[15px] font-semibold leading-tight text-foreground">
+          {data.name}
+        </span>
         <MoveStats data={data} />
         {suffix}
       </span>
@@ -140,9 +144,11 @@ export function MoveDisplay({
 
   return (
     <span className={`flex min-w-0 items-center gap-2.5 ${className}`}>
-      <TypeBadge type={data.type} size="sm" />
+      <TypeBadge type={data.type} size="sm" className="saturate-150" />
       <span className="min-w-0 flex-1">
-        <span className="block truncate font-medium leading-tight">{data.name}</span>
+        <span className="block truncate text-[15px] font-semibold leading-tight text-foreground">
+          {data.name}
+        </span>
         <MoveStats data={data} />
       </span>
       <MoveCategoryIcon category={data.category} size="md" />

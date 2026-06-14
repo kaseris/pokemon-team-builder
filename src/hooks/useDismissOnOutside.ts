@@ -1,13 +1,20 @@
 import { useEffect, type RefObject } from 'react';
 
+type RefTarget = RefObject<HTMLElement | null> | RefObject<HTMLElement | null>[];
+
+function containsTarget(refs: RefTarget, target: Node): boolean {
+  const list = Array.isArray(refs) ? refs : [refs];
+  return list.some((ref) => ref.current?.contains(target));
+}
+
 /**
- * Calls `onDismiss` when the user interacts outside the referenced element,
+ * Calls `onDismiss` when the user interacts outside the referenced element(s),
  * either by pointing/clicking elsewhere or by moving focus to another element
  * (e.g. tabbing away). No-op while `enabled` is false so closed popovers don't
  * pay for listeners.
  */
 export function useDismissOnOutside(
-  ref: RefObject<HTMLElement | null>,
+  refs: RefTarget,
   enabled: boolean,
   onDismiss: () => void,
 ) {
@@ -16,7 +23,7 @@ export function useDismissOnOutside(
 
     const handle = (e: Event) => {
       const target = e.target as Node | null;
-      if (target && ref.current && !ref.current.contains(target)) {
+      if (target && !containsTarget(refs, target)) {
         onDismiss();
       }
     };
@@ -27,5 +34,5 @@ export function useDismissOnOutside(
       document.removeEventListener('mousedown', handle);
       document.removeEventListener('focusin', handle);
     };
-  }, [ref, enabled, onDismiss]);
+  }, [enabled, onDismiss]);
 }
