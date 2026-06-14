@@ -205,12 +205,14 @@ function JirachiAssistantWidget() {
       aria-hidden="true"
     >
       <div
-        className="relative z-10 -mb-8 rounded-xl border border-border/80 bg-surface-raised/90 px-3 py-2 shadow-sm backdrop-blur-sm"
+        className="relative z-10 -mb-8 rounded-2xl border-[3px] border-accent bg-surface-raised px-4 py-2.5 shadow-md backdrop-blur-sm"
       >
-        <p className="text-xs font-medium text-foreground">How can I help?</p>
-        {/* Tail pointing down toward Jirachi, connecting the bubble to him. */}
+        <p className="text-base font-semibold leading-snug text-foreground">How can I help?</p>
+        {/* Tail pointing down toward Jirachi, connecting the bubble to him.
+            Overlaps the bubble's bottom edge so its border-less top corner hides
+            the seam, leaving the two accent borders to form the point. */}
         <div
-          className="absolute -bottom-1 left-1/2 h-3 w-3 -translate-x-1/2 rotate-45 rounded-[2px] border-b border-r border-border/80 bg-surface-raised/90"
+          className="absolute -bottom-[7px] left-1/2 h-3.5 w-3.5 -translate-x-1/2 rotate-45 rounded-br-[3px] border-b-[3px] border-r-[3px] border-accent bg-surface-raised"
         />
       </div>
 
